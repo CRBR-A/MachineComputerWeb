@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Ω500 Screens</title>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="../res/main.css">
+	</head>
+	<body>
+
+		<header>
+			<h1><a href="./">Ω500</a></h1>
+		</header>
+
+		<section>
+			<canvas id="board"></canvas>
+			<p class="note">
+				Simplest "game": just a title screen that the game object
+				updates and renders. Actually, the system works
+				<a href="hello.html">without a screen object</a> - but
+				it's a convenient way to group parts of your game.
+			</p>
+			<a class="home" href="./">back</a>
+		</section>
+
+		<script src="../../build/Ω500.js"></script>
+
+		<script>
+
+			var TitleScreen = Ω.Screen.extend({
+
+				tick: function () {
+
+					this.msgX = Ω.env.w * 0.4;
+					this.msgY = (Math.cos(Date.now() / 200) * 3) + Ω.env.h * 0.5;
+
+				},
+
+				render: function (gfx) {
+
+					var c = gfx.ctx;
+
+					this.clear(gfx, "#000");
+
+					c.fillStyle = "#fff";
+					c.fillText("Hello, Ω500 Screens.", this.msgX, this.msgY);
+
+				}
+
+			});
+
+			/*
+
+				Simplest "game" with Screen
+
+			*/
+			new (Ω.Game.extend({
+
+				canvas: "#board",
+
+				init: function (w, h) {
+
+					this._super(w, h);
+
+					Ω.input.bind({
+						"space": "space",
+						"left": "left",
+						"right": "right",
+						"up": "up",
+						"down": "down"
+					});
+
+					this.setScreen(new TitleScreen());
+
+				}
+
+			}))(400, 300);
+
+		</script>
+	</body>
+</html>

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Concats the library into Ω500.js
+
+output="./Ω500.js"
+templatePath="../ex/template.lib"
+
+# Add the header
+cat header>$output
+
+# Add the lib files
+exec<"files"
+while read line
+do
+	cat "../$line">>$output
+done
+echo "lib built...";
+
+# Copy the library to the template project
+cp $output $templatePath
+echo "copied to template"
+
+echo "done."
+

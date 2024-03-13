@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# Creates a new project ready to go
+
+# doesn't work yet though.
+
+while test $# -gt 0; do
+    case "$1" in
+        -h|--help)
+            echo "Create new Ω500 project"
+            echo " "
+            echo "proj [options] path"
+            echo " "
+            echo "options:"
+            echo "-h, --help                show brief help"
+            echo "-t, --title       		specify project title"
+            echo "-min                      use the minified version of the lib"
+            echo "-o, --output-dir=DIR      specify a directory to store output in"
+            echo "libs:"
+            echo "-pf, --pathfind           include A* lib"
+            echo "-noise, --noise           include Simplex noise lib"
+            exit 0
+            ;;
+        -t)
+            shift
+            if test $# -gt 0; then
+                    title=$1
+                    echo "Project name: $title"
+            else
+                    echo "no title specified"
+                    exit 1
+            fi
+            shift
+            ;;
+        --title*)
+            title=`echo $1 | sed -e 's/^[^=]*=//g'`
+            echo "Project name: $title"
+            shift
+            ;;
+        -o)
+            shift
+            if test $# -gt 0; then
+                    echo "Output dir: $1"
+            else
+                    echo "no output dir specified"
+                    exit 1
+            fi
+            shift
+            ;;
+        --output-dir*)
+            echo "outpitut dir: `echo $1 | sed -e 's/^[^=]*=//g'`"
+            shift
+            ;;
+        -pf|--pathfind)
+            echo "Include the pathfinding"
+            shift
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+echo parms: $# $title
+
+# Once options are set, copy stuff
+
+# Read "files", copy...
+outpath="tmp"
+rm -rf $outpath
+mkdir $outpath
+mkdir $outpath/lib
+
+cat "html_start">$outpath/index.html
+
+exec<"files"
+while read line
+do
+    cp "../$line" $outpath/lib
+    echo -e "\t\t<script src=\"lib/$line\"></script>">>$outpath/index.html
+done
+
+cat "html_end">>$outpath/index.html
+
+
+

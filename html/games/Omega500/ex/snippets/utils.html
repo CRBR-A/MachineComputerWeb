@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Ω500 Utils</title>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="../res/main.css">
+	</head>
+	<body>
+
+		<header>
+		  <h1><a href="./">Ω500</a></h1>
+		</header>
+
+		<section>
+			<canvas id="board"></canvas>
+			<a class="home" href="./">back</a>
+		</section>
+
+		<script src="../../build/Ω500.js"></script>
+
+		<script>
+
+			// Now make a screen to show a couple of Players
+			var MainScreen = Ω.Screen.extend({
+
+				sheet: new Ω.SpriteSheet("../platformer/res/charzera.png", 25, 45),
+
+				init: function () {
+
+					// Or should it be like this?
+					// start = Ω.utils.now();
+					// end = this.s + 3000;
+					// SmoothStep(minPos, maxPos, (ratio(start, end, Ω.utils.now())))
+
+					this.x = 40;
+					this.min = 40;
+					this.max = Ω.env.w - 40;
+
+					this.col = "#888";
+
+				},
+
+				tick: function () {
+
+					this.x += 2;
+					if (this.x > this.max) {
+						this.x = this.min;
+					}
+
+					if (Ω.utils.oneIn(30)) {
+						this.col = Ω.utils.colors.next();
+					}
+
+				},
+
+				render: function (gfx) {
+
+					var c = gfx.ctx;
+
+					this.clear(gfx, this.col);
+
+					this.sheet.render(gfx, 0, 0, this.x, gfx.h * 0.45);
+
+					this.sheet.render(gfx, 0, 0, Ω.math.smoothstep(this.min, this.max, this.x), gfx.h * 0.3);
+
+					this.sheet.render(gfx, 0, 0, Ω.math.lerp(this.min, this.max, this.x), gfx.h * 0.6);
+
+					this.sheet.render(gfx, 0, 0,
+						Ω.math.ease.bounce(
+							this.min,
+							this.max,
+							(this.x - this.min) / (this.max - this.min)),
+						gfx.h * 0.8);
+
+				}
+
+			});
+
+			// A Game object for set up and runnin'
+			new (Ω.Game.extend({
+
+				canvas: "#board",
+
+				load: function () {
+
+					this.setScreen(new MainScreen());
+
+				}
+
+			}))(400, 300);
+
+		</script>
+	</body>
+</html>

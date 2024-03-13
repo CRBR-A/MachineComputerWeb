@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Ω500 Font plotting</title>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="../res/main.css">
+	</head>
+	<body>
+
+    <header>
+      <h1><a href="./">Ω500</a></h1>
+    </header>
+
+		<section>
+			<canvas id="board"></canvas>
+			<a class="home" href="./">back</a>
+		</section>
+
+		<script src="../../build/Ω500.js"></script>
+		<script src="editor.js"></script>
+
+		<script id="code">
+
+			// [ed]
+			var MainScreen = Ω.Screen.extend({
+
+				font: new Ω.Font("../res/fonts/nuskool_krome_64x64.png", 64, 64),
+				font2: new Ω.Font("../res/fonts/bubblemad_8x8.png", 8, 8),
+				font3: new Ω.Font("../res/fonts/proportional_16x16.png", 16, 16),
+
+				render: function (gfx) {
+
+					this.clear(gfx, "#111");
+
+					this.font.render(gfx, "demos!", 20, 30);
+					this.font2.render(gfx, "drawing (bitmap) fonts >>> yeah!", 60, 100);
+					this.font2.render(gfx, "nice and oldschool and monospaced...", 60, 110);
+					this.font3.render(gfx, "<yet another font>", 70, 200);
+
+				}
+
+			});
+			// [/ed]
+
+			var game = new (Ω.Game.extend({
+
+				canvas: "#board",
+
+				init: function (w, h) {
+
+					this._super(w, h);
+					this.setScreen(new MainScreen());
+
+				}
+
+			}))(400, 300);
+
+		</script>
+
+	</body>
+</html>

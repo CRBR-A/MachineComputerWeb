@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Ω500 Mixin test</title>
+		<meta charset="utf-8">
+		<link rel="stylesheet" href="../res/main.css">
+	</head>
+	<body>
+
+		<header>
+		  <h1><a href="./">Ω500</a></h1>
+		</header>
+
+		<section>
+			<canvas id="board"></canvas>
+			<p class="note">
+				The mixin system acts like a simple "entity component system" - you can easily add behaviours to an existing entity. Here we see "velocity", "sin", and "gravity" behaviours. Move with arrow keys.
+			</p>
+			<a class="home" href="./">back</a>
+
+		</section>
+
+		<script src="../../build/Ω500.js"></script>
+
+		<script>
+
+			var Guy = Ω.Entity.extend({
+
+				w: 18,
+				h: 25,
+
+				color: "#488",
+
+				jumping: false,
+
+				// Apply these mixins to all instances
+				traits: [
+					{trait: Ω.traits.Velocity},
+					{trait: Ω.traits.Sin, speed: 130, amp: 4, target: "xo"}
+				],
+
+				tick: function (map) {
+
+					if (!this.jumping && Ω.input.isDown("up")) {
+						this.jumping = true;
+						this.moveBy(0, -30);
+					}
+					if (Ω.input.isDown("down")) {
+						this.moveBy(0, 2);
+					}
+					if (Ω.input.isDown("left")) {
+						this.moveBy(-2, 0);
+					}
+					if (Ω.input.isDown("right")) {
+						this.moveBy(2, 0);
+					}
+
+					this._super(); // Tick mixins
+
+					this.move(this.xo, this.yo, map);
+
+					if (!this.falling) {
+						this.jumping = false;
+					}
+
+
+				},
+
+				render: function (gfx) {
+
+					var c = gfx.ctx;
+
+					c.fillStyle = this.remove ? "#900" : this.color;
+					c.fillRect(this.x, this.y, this.w, this.h);
+
+				}
+
+			});
+
+
+			var MainScreen = Ω.Screen.extend({
+
+				sheet: new Ω.SpriteSheet("../res/sheets/tiles.png", 32, 32),
+
+				init: function () {
+
+					this.map = new Ω.Map(this.sheet, [
+						[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+						[1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+						[1,0,0,1,1,1,0,1,0,0,0,0,0,1],
+						[1,0,0,0,0,0,0,0,1,0,0,0,1,1],
+						[1,0,4,1,1,1,0,1,0,0,1,1,0,1],
+						[1,0,0,0,0,1,0,0,0,1,0,0,0,1],
+						[1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+						[1,0,0,0,0,2,2,2,2,2,2,2,0,1],
+						[1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+						[1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+					]);
+
+					// Make some players & mix in some new things
+					this.p1 = new Guy(6 * 32, 6 * 32);
+					this.p1.mixin([
+
+						// Add some gravity
+						{trait: Ω.traits.Gravity},
+
+						// Some timer-type traits
+						{trait: Ω.traits.RemoveAfter, ticks: 300},
+						{trait: Ω.traits.Ticker, ticks: 100, cb: function (t) {
+							this.color = "#0f0";
+						}}
+
+					]);
+
+					this.p2 = new Guy(2 * 32, 2 * 32);
+					this.p2.mixin([
+						{trait: Ω.traits.Velocity},
+						{trait: Ω.traits.Sin, speed: 170, amp: 30}
+					]);
+
+				},
+
+				tick: function () {
+
+					// Update the player
+					this.p1.tick(this.map);
+					this.p2.tick(this.map);
+
+				},
+
+				render: function (gfx) {
+
+					var c = gfx.ctx;
+
+					this.clear(gfx, "#000");
+
+					// Draw the player and map
+					this.map.render(gfx);
+					this.p1.render(gfx);
+					this.p2.render(gfx);
+
+				}
+
+			});
+
+			new (Ω.Game.extend({
+
+				canvas: "#board",
+
+				load: function () {
+
+					Ω.input.bind({
+						"left": "left",
+						"right": "right",
+						"up": "up",
+						"down": "down"
+					});
+
+					this.setScreen(new MainScreen());
+
+				}
+
+			}))(32 * 14, 32 * 10);
+
+		</script>
+	</body>
+</html>
