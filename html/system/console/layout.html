@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf8" />
+    <script src="./main.js"></script>
+  </head>
+  <script>
+    const lorem =
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas malesuada scelerisque ullamcorper. Fusce quis porta lectus, eu finibus magna. Ut id tortor et tellus fringilla dictum ut euismod est. Sed quis dictum massa, eu ultricies dolor. Nunc pellentesque risus ut urna congue ultricies. Donec finibus fermentum mauris, ut ultrices nibh interdum non. Morbi consequat justo nec lacinia varius. Donec dolor est, mollis vitae nunc in, viverra sagittis ante. Suspendisse mollis magna ipsum, ut suscipit dui hendrerit at. Donec vehicula lacus et aliquet fringilla. In sodales, justo sit amet mollis blandit, neque sem luctus nisi, a aliquet quam dui a magna. Nulla volutpat, libero vel semper egestas, risus sapien volutpat enim, pulvinar congue libero ex vitae diam. Nam consequat gravida interdum.';
+    const longWord =
+      'LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONG WOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOORD';
+    print('Hello world!');
+    err('Oh oh. Something went wrong...');
+    warn("That's not that serious");
+    success('Congratulation! You finally dit it!');
+    info(
+      "A lunar distance, 384402 km, is the Moon's average distance to Earth."
+    );
+    input('Bigger objects incoming...');
+    print(lorem);
+    print(longWord);
+    print([1, 2, 3, 4, 5]);
+    print({ firstName: 'John', lastName: 'Smith' });
+    input('What is your name ?').then(name => info('Your name is ' + name));
+  </script>
+</html>
