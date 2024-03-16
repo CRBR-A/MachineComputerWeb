@@ -1,28 +1,120 @@
 "use strict";
 
-//Create simple function for basic operation
-function addition(value1, value2){return value1+value2;}
-function subtraction(value1, value2){return value1-value2;}
-function multiplication(value1, value2){return value1*value2;}
-function division(value1, value2){return value1/value2;}
-function mod(value1, value2){return value1%value2;} //remainder from division
-function percent(value){return value/100;}
-function factorial(value){
-  return (Number.isInteger(value) ? factorial_int(value) : factorial_gamma(value+1));
+var parameterSeparator=",";
+
+//FUNCTIONS : MATH
+function fct_math_isInteger(parameters){
+  return Number.isInteger(parameters);
 }
-function factorial_int(value){
-  return (value == 0 ? 1 : (value * factorial_int(value - 1)));
+function fct_math_isNumber(parameters){
+  return isNaN(parameters);
 }
-function factorial_gamma(value) {
+function fct_math_addition(parameters){
+  var result=parameters[0];
+  var idx;
+  for(idx=1; idx<parameters.length; idx++){
+    result=result+parameters[idx];
+  }
+  return result;
+}
+function fct_math_subtraction(parameters){
+  var result=parameters[0];
+  var idx;
+  for(idx=1; idx<parameters.length; idx++){
+    result=result-parameters[idx];
+  }
+  return result;
+}
+function fct_math_multiplication(parameters){
+  var result=parameters[0];
+  var idx;
+  for(idx=1; idx<parameters.length; idx++){
+    result=result*parameters[idx];
+  }
+  return result;
+}
+function fct_math_division(parameters){
+  var result=parameters[0];
+  var idx;
+  for(idx=1; idx<parameters.length; idx++){
+    result=result/parameters[idx];
+  }
+  return result;
+}
+function fct_math_mod(parameters){
+  //TODO : replace
+  return value1%value2;
+}
+function fct_math_percent(parameters){
+    //TODO : replace
+  return fct_math_division(parameters,100);
+}
+function fct_math_factorial(parameters){
+  if(fct_math_isInteger(parameters)){
+    return fct_math_factorialInteger(parameters);
+  }else{
+    //fact_Gamma(value+1)
+    //TODO value+1 in parameters....
+    return fct_math_factorialGamma(fct_math_addition(value));
+  }
+}
+function fct_math_factorialInteger(value){
+  if(value == 0){
+    //fact(0)=1
+    return 1;
+  }else{
+    //fact(value)=value*fact(value-1)
+    return fct_math_multiplication(value, fct_math_factorialInteger(fct_math_subtraction(value,1)));
+  }
+}
+function fct_math_factorialGamma(value) {
   var tmp=(value-0.5)*Math.log(value+4.5)-(value+4.5);
   var ser=1.0+76.18009173/(value+0)-86.50532033/(value+1)+24.01409822/(value+2);
   ser=ser-1.231739516/(value+3)+0.00120858003/(value+4)-0.00000536382/(value+5);
   return Math.exp(tmp+Math.log(ser*Math.sqrt(2*Math.PI)));
 }
+function fct_math_random(value){
+  return Math.random;
+}
+function fct_math_pi(value){
+  return 3.141592653589793;
+}
+function fct_math_e(value){
+  return 2.718281828459045;
+}
+function fct_check_Parenthesis(value){
+  var parenthesesNotClosed=0;
+  var pos=0;
+  var error=false;
+  
+  //Loop all characters
+  //Until error OR end of string
+  while(!error && pos<value.length){
+    if(value[pos] == "("){
+      parenthesesNotClosed++;
+    }else{
+      if(value[pos] == ")"){
+        parenthesesNotClosed--;
+      }
+    }
+    if(parenthesesNotClosed < 0){
+      error=true;
+    }else{
+      pos++;
+    }
+  }
+  if(error || parenthesesNotClosed !== 0){
+    return pos;
+  }else{
+    return -1;
+  }
+}
+
+
 
 //Array (key = function name) -> category, function, number of arguments
 var functions=[];
-functions["random"]=["Math", Math.random, 0];
+functions["random"]=["Math", fct_math_random, 0];
 functions["cos"]=["Math", Math.cos, 1];
 functions["cosh"]=["Math", Math.cosh, 1];
 functions["acos"]=["Math", Math.acos, 1];
@@ -50,44 +142,42 @@ functions["expm1"]=["Math", Math.expm1, 1];
 functions["clz32"]=["Math", Math.clz32, 1];
 functions["imul"]=["Math", Math.imul, 2];
 functions["fround"]=["Math", Math.fround, 1];
-functions["addition"]=["Math", addition, 2];
-functions["subtraction"]=["Math", subtraction, 2];
-functions["multiplication"]=["Math", multiplication, 2];
-functions["division"]=["Math", division, 2];
-functions["mod"]=["Math", mod, 2];
+functions["addition"]=["Math", fct_math_addition, 2];
+functions["subtraction"]=["Math", fct_math_subtraction, 2];
+functions["multiplication"]=["Math", fct_math_multiplication, 2];
+functions["division"]=["Math", fct_math_division, 2];
+functions["mod"]=["Math", fct_math_mod, 2];
 functions["pow"]=["Math", Math.pow, 2];
 functions["atan2"]=["Math", Math.atan2, 2];
 functions["max"]=["Math", Math.max];
 functions["min"]=["Math", Math.min];
 functions["hypot"]=["Math", Math.hypot];
 
-functions["factorial"]=["Math", factorial, 1]; //special operator : n!
-functions["percent"]=["Math", percent, 1];   //special operator : n% 
+functions["factorial"]=["Math", fct_math_factorial, 1]; //special operator : n!
+functions["percent"]=["Math", fct_math_percent, 1];  //special operator : n%
 
-var values=[]
-values["pi"]=["Math", Math.PI];
-values["e"]=["Math", Math.E];
+///FORMULATEXT(cell); //return formula !!!!
+//ADDRESS(row_num, column_num, [abs_num], [a1], [sheet_text])
+//AREAS(reference)
+
+var values=[];
+values["pi"]=["Math", fct_math_pi];
+values["e"]=["Math", fct_math_e];
 
 //Keyname -> mathematical symbol
+//Warning !!! order IS important !!!!!
 var specialSymbols=[];
+specialSymbols["square"]=["²"];
+specialSymbols["pow"]=["^"];
+specialSymbols["factorial"]=["!"]; 
+specialSymbols["percent"]=["%"]; //=x/100
+specialSymbols["mod"]=["%"];
+specialSymbols["division"]=["/"];
+specialSymbols["multiplication"]=["*"];
 specialSymbols["addition"]=["+"];
 specialSymbols["subtraction"]=["-"];
-specialSymbols["multiplication"]=["*"];
-specialSymbols["division"]=["/"];
-specialSymbols["mod"]=["%"];
-specialSymbols["pow"]=["^"];
-specialSymbols["percent"]=["%"];
-specialSymbols["factorial"]=["!"]; 
-//minus sign ??? simplified
 
-
-//BODMAS :
-//Brackets (always first)
-//Orders (powers or square roots)
-//Division
-//Multiplication
-//Addition
-//Subtraction
+//minus sign ???
 
 function consoleError(aFormula, pos, message){
   console.error(aFormula);
@@ -105,48 +195,51 @@ function calculate(aFormula, stepByStep=false){
   //symbolicOperations(simplifiedFormula, stepByStep);
 }
 
+//execute the functionName(parameter)
 function doFunction(functionName, parameter){
+  //If the function exist
   if(functionName in functions){
-    if(functions[functionName][2]==0){
-      return functions[functionName][1]();
-    }else{
-      return functionName+"["+parameter+"]";
-      //symbolicOperations()
-    }
+
+    //Split the string parameters into array
+    var parameters=splitParameters(parameter);
+
+    return functions[functionName][1](parameters);
   }
   //ERROR not a function???
-  
 }
 
-//return -1 if OK, or a positive number (the position of the 1st parenthesis error)
-function checkParenthesis(aFormula){
-  var parenthesesNotClosed=0;
-  var pos=0;
+//Split a string, containing separated values, into array of string
+//Beware of escaping character !
+function splitParameters(parameter){
+  var parameters=[];
   var error=false;
+  var pos=0;
+  var currentParameter="";
+  var previousCharacter="";
+  var insideString=false;
   
-  while(!error && pos<aFormula.length){
-  
-    if(aFormula[pos] == "("){
-      parenthesesNotClosed++;
-    }
-
-    if(aFormula[pos] == ")"){
-      parenthesesNotClosed--;
+  //loop all characters in String
+  //for spiting
+  //until error or done
+  while(!error && pos<parameter.length){
+    var currentChar=parameter[pos];
+    //if the current character is the parameter separator
+    if(parameter[pos] == parameterSeparator){
+      parameters.push(currentParameter);
+      currentParameter="";
+    }else{
+      currentParameter=currentParameter+currentChar;
     }
     
-    if(parenthesesNotClosed < 0){
-      error=true;
-    }else{
-      pos++;
-    }
+    //save the current character for later
+    //case : of escaping quotes
+    parameterSeparator=currentChar;
   }
-  
-  if(error || parenthesesNotClosed !== 0){
-    return pos;
-  }else{
-    return -1;
-  }
+  return parameters;
 }
+
+
+
 
 
 /* if(parenthesesNotClosed !== 0){
@@ -166,7 +259,7 @@ function parenthesesOperations(aFormula, stepByStep=false){
   var steps=[];
   var done=false;
   
-  if(checkParenthesis(aFormula)>0){
+  if(fct_check_Parenthesis(aFormula)>0){
     error=true;
   }
 
@@ -183,7 +276,7 @@ function parenthesesOperations(aFormula, stepByStep=false){
 
     //SUB-LOOP 
     //calculate the 1st pair of parenthesis
-    //until : done OR end of the formula reached (no parenthesis) OR error
+    //until : end of the formula (no parenthesis) OR error or new formula
     //to simplify the first "(...)"
     while(!error && pos<currentFormula.length && simplifiedFormula == ""){
       
@@ -231,12 +324,12 @@ function parenthesesOperations(aFormula, stepByStep=false){
       done=true;
     }
     
-    currentFormula=simplifiedFormula;
-    
-
-    
-    if(stepByStep){
-      steps.push(currentFormula);
+    //if new formula, save it
+    if(simplifiedFormula !== ""){
+      currentFormula=simplifiedFormula;
+      if(stepByStep){
+        steps.push(currentFormula);
+      }
     }
   }
 
