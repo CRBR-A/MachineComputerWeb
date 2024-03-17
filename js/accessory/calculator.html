@@ -4,9 +4,10 @@
     <meta charset="utf8" />
       <script src="./calculator.js"></script>
       <script>
-        calculate("2+addition(123456789)+random(random())", true);
-        calculate("10*random()", true);
+        console.log("Constructor", Calculate("2+addition(123456789)+random(random())"));
+        console.log("Constructor", Calculate("10*random()"));
+        var calculator = new Calculate();
+        console.log("calc1", calculator("10*random()"));
       </script>
-
   </head>
 </html>
