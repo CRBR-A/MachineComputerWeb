@@ -1,0 +1,32 @@
+//arguments : array of arguments in a function
+
+function myFunction(){ return arguments[0]; }
+myFunction.apply(null, arrayOfArguments);
+
+----
+
+"use strict";
+
+-----
+
+Can be call with : Sum(1, 2, 3);
+Can be call with a new instance : var mySum = Sum(); mySum(1, 2, 3);
+
+var Sum = function(){
+
+  function sum () {
+      var result = 0;
+      for (var i = 0; i < arguments.length; i++) {
+          result += arguments[i];
+      }
+      return result;
+  }
+  
+  if (arguments.length == 0) {
+    //no arguments, return function
+    return sum;
+  }else{
+    //Arguments 
+    return sum.apply(null, arguments);
+  }
+};

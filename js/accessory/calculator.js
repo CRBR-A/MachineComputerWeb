@@ -9,50 +9,60 @@ var Calculate = function(mainFormula){
     return Number.isInteger(parameters);
   }
   function fct_math_isNumber(parameters){
-    return isNaN(parameters);
+    return !isNaN(parameters);
   }
-  function fct_math_addition(parameters){
-    var result=parameters[0];
+
+  //parse and return the good type of value
+  function fct_useGoodType(parameter){
+    if( fct_math_isNumber(parameter)){
+      return parseFloat(parameter);
+    }else{
+      return parameter;
+    }
+  }
+
+  function fct_math_addition(){
+    var result=arguments[0];
     var idx;
-    for(idx=1; idx<parameters.length; idx++){
-      result=result+parameters[idx];
+    for(idx=1; idx<arguments.length; idx++){
+      result=result+arguments[idx];
     }
     return result;
   }
-  function fct_math_subtraction(parameters){
-    var result=parameters[0];
+  function fct_math_subtraction(){
+    var result=arguments[0];
     var idx;
-    for(idx=1; idx<parameters.length; idx++){
-      result=result-parameters[idx];
+    for(idx=1; idx<arguments.length; idx++){
+      result=result-arguments[idx];
     }
     return result;
   }
-  function fct_math_multiplication(parameters){
-    var result=parameters[0];
+  function fct_math_multiplication(){
+    var result=arguments[0];
     var idx;
-    for(idx=1; idx<parameters.length; idx++){
-      result=result*parameters[idx];
+    for(idx=1; idx<arguments.length; idx++){
+      result=result*arguments[idx];
     }
     return result;
   }
-  function fct_math_division(parameters){
-    var result=parameters[0];
+  function fct_math_division(){
+    var result=arguments[0];
     var idx;
-    for(idx=1; idx<parameters.length; idx++){
-      result=result/parameters[idx];
+    for(idx=1; idx<arguments.length; idx++){
+      result=result/arguments[idx];
     }
     return result;
   }
-  function fct_math_mod(parameters){
-    var result=parameters[0];
+  function fct_math_mod(){
+    var result=arguments[0];
     var idx;
-    for(idx=1; idx<parameters.length; idx++){
-      result=result%parameters[idx];
+    for(idx=1; idx<arguments.length; idx++){
+      result=result%arguments[idx];
     }
     return result;
   }
-  function fct_math_percent(parameters){
-    return fct_math_division(parameters,100);
+  function fct_math_percent(){
+    return fct_math_division(arguments[0],100);
   }
   function fct_math_factorial(parameters){
     if(fct_math_isInteger(parameters)){
@@ -82,10 +92,10 @@ var Calculate = function(mainFormula){
     return Math.random();
   }
   function fct_math_pi(value){
-    return 3.141592653589793;
+    return Math.Pi; //or 3.141592653589793;
   }
   function fct_math_e(value){
-    return 2.718281828459045;
+    return Math.E; //or 2.718281828459045;
   }
   
   function checkParenthesis(value){
@@ -173,6 +183,8 @@ var Calculate = function(mainFormula){
   //Keyname -> mathematical symbol
   //Warning !!! order IS important !!!!!
   var specialSymbols=[];
+  specialSymbols["cellReference"]=[":"];
+  specialSymbols["intersection"]=[" "]; //(=common cells)
   specialSymbols["square"]=["²"];
   specialSymbols["pow"]=["^"];
   specialSymbols["factorial"]=["!"]; 
@@ -183,16 +195,16 @@ var Calculate = function(mainFormula){
   specialSymbols["addition"]=["+"];
   specialSymbols["subtraction"]=["-"];
   
-  specialSymbols["equal"]=["="];
-  specialSymbols["inferior"]=["<"];
-  specialSymbols["superior"]=[">"];
-  specialSymbols["wildcard"]=["*"];
   specialSymbols["concatenate"]=["&"];
-  specialSymbols["absolute"]=["$"];  /
+  specialSymbols["equal"]=["="];  //affectation AND test !!!
+  specialSymbols["notEqual"]=["<>"];
+  specialSymbols["lessEqual"]=["<="];
+  specialSymbols["greaterEqual"]=[">="];
+  specialSymbols["less"]=["<"];
+  specialSymbols["greater"]=[">"];
+  specialSymbols["wildcard"]=["*"];
+  specialSymbols["absolute"]=["$"];
   specialSymbols["sheetReference"]=["!"];  //Sheet2!A1:B1
-  specialSymbols["cellReference"]=[":"];
-  
-  
   
 
   //minus sign ???
@@ -212,10 +224,10 @@ var Calculate = function(mainFormula){
   function doFunction(functionName, parameter){
     //Split the string parameters into array
     var parameters=splitParameters(parameter);
-    
+
     //If the function exist
     if(functionName in functions){
-      return functions[functionName][1](parameters);
+      return functions[functionName][1].apply(null, parameters);
     }
     //ERROR not a function???
   }
@@ -239,14 +251,16 @@ var Calculate = function(mainFormula){
       currentChar=parameter[pos];
       //if the current character is the parameter separator
       if(currentChar == parameterSeparator){
-        result.push(currentParameter);
+        var subResult=symbolicOperations(currentParameter);
+        result.push(fct_useGoodType(subResult));
+        //reset current parameter
         currentParameter="";
       }else{
         currentParameter=currentParameter+currentChar;
       }
       
       //save the current character for later
-      //in case of string (escaping quotes)
+      //in case of string (like escaping quotes)
       previousCharacter=currentChar;
       
       //Next character if no errors
@@ -257,7 +271,7 @@ var Calculate = function(mainFormula){
     
     //Add the last parameter (if formula is not empty)
     if(parameter.length>0){
-      result.push(currentParameter);
+      result.push(fct_useGoodType(currentParameter));
     }
     
     return result;
@@ -276,6 +290,14 @@ var Calculate = function(mainFormula){
     consoleError(currentFormula, pos, msgError);
   }
    */
+   
+  
+  function replaceSubFormula(mainFormula, subFormula, start, end){
+    var leftFormula=mainFormula.substring(0, start);
+    var rightFormula=mainFormula.substring(end, mainFormula.length);
+    var result=leftFormula+subFormula+rightFormula;
+    return result;
+  }
 
   function parenthesesOperations(aFormula){
     
@@ -283,6 +305,7 @@ var Calculate = function(mainFormula){
     var currentFormula=aFormula;
     var done=false;
     
+    //check parenthesis errors
     if(checkParenthesis(aFormula)>0){
       error=true;
     }
@@ -300,7 +323,7 @@ var Calculate = function(mainFormula){
 
       //SUB-LOOP 
       //calculate the 1st pair of parenthesis
-      //until : end of the formula (no parenthesis) OR error or new formula
+      //until : Error OR end of the formula (no parenthesis) OR new formula
       //to simplify the first "(...)"
       while(!error && pos<currentFormula.length && simplifiedFormula == ""){
         
@@ -320,13 +343,9 @@ var Calculate = function(mainFormula){
           }
           var parameters=currentFormula.substring(lastOpenedParenIdx+1, pos);
           var result=doFunction(functionName, parameters);
-          
-          var leftFormula=currentFormula.substring(0, itemParenthesisStart);
-          var rightFormula=currentFormula.substring(pos+1, currentFormula.length);
-          simplifiedFormula=leftFormula+result+rightFormula;
+          simplifiedFormula=replaceSubFormula(currentFormula, result, itemParenthesisStart, pos+1);
           parenthesisRemaining--;
         }else{
-          
           var key;
           for(key in specialSymbols){
             if(specialSymbols[key]==currentFormula[pos]){
@@ -343,7 +362,7 @@ var Calculate = function(mainFormula){
         }
       }
       
-      //Done : if end of the formula AND no more parenthesis
+      //end of the formula AND no more parenthesis ?? done
       if(pos==currentFormula.length && parenthesisRemaining==0){
         done=true;
       }
@@ -357,23 +376,46 @@ var Calculate = function(mainFormula){
       }
     }
     
+    //Return the new formula, without parenthesis
     return currentFormula;
   }
 
-
-  function symbolicOperations(aFormula){
-    return "symbolicOperations";
+  function symbolicOperations(aFormula, start, end){
+    
+    var error=false;
+    var done=false;
+    var currentFormula;
+    
+    if (typeof start !== 'undefined') {
+      //if no end position, use the formula length
+      if (typeof end == 'undefined') {
+        end=aFormula.length;
+      }
+      //extract the sub-formula
+      currentFormula=aFormula.substring(start, end);
+    }else{
+      //calculate the full formula
+      currentFormula=aFormula
+    }
+   
+    //CHEATING AT THE MOMENT !
+    //USING EVAL : since NO parenthesis = NO JS code !! = safe !
+    var simplifiedFormula=eval(currentFormula);
+    
+    //Return the result
+    return simplifiedFormula;
   }
   
-  function calculate(aFormula){
-    return parenthesesOperations(aFormula);
-    //symbolicOperations(simplifiedFormula);
+  function calculate(){
+    var aFormula = arguments[0];
+    var formulaWithoutParenthesis = parenthesesOperations(aFormula);
+    //if no error continue :
+    return symbolicOperations(formulaWithoutParenthesis);
   }
-  
-  
-  if (typeof mainFormula !== 'undefined') {
+ 
+  if (arguments.length>0) {
     //'Constructor' WITH a formula : calculate
-    return calculate(mainFormula);
+    return calculate.apply(null, arguments);
   }else{
     //else, return the function to calculate !!!!
     return calculate;
