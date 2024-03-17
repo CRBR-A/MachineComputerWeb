@@ -1,6 +1,6 @@
 "use strict";
 
-var Calculate = function(mainFormula){
+var Calculate = function(){
 
   var parameterSeparator=",";
 
@@ -413,7 +413,7 @@ var Calculate = function(mainFormula){
     return symbolicOperations(formulaWithoutParenthesis);
   }
  
-  if (arguments.length>0) {
+  if(arguments.length>0){
     //'Constructor' WITH a formula : calculate
     return calculate.apply(null, arguments);
   }else{
