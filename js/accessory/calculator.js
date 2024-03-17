@@ -182,6 +182,18 @@ var Calculate = function(mainFormula){
   specialSymbols["multiplication"]=["*"];
   specialSymbols["addition"]=["+"];
   specialSymbols["subtraction"]=["-"];
+  
+  specialSymbols["equal"]=["="];
+  specialSymbols["inferior"]=["<"];
+  specialSymbols["superior"]=[">"];
+  specialSymbols["wildcard"]=["*"];
+  specialSymbols["concatenate"]=["&"];
+  specialSymbols["absolute"]=["$"];  /
+  specialSymbols["sheetReference"]=["!"];  //Sheet2!A1:B1
+  specialSymbols["cellReference"]=[":"];
+  
+  
+  
 
   //minus sign ???
 
@@ -265,7 +277,7 @@ var Calculate = function(mainFormula){
   }
    */
 
-  function parenthesesOperations(aFormula, stepFunction){
+  function parenthesesOperations(aFormula){
     
     var error=false;
     var currentFormula=aFormula;
@@ -331,7 +343,7 @@ var Calculate = function(mainFormula){
         }
       }
       
-      //Done if end of the formula AND no more parenthesis
+      //Done : if end of the formula AND no more parenthesis
       if(pos==currentFormula.length && parenthesisRemaining==0){
         done=true;
       }
@@ -339,9 +351,9 @@ var Calculate = function(mainFormula){
       //if new formula, save it
       if(simplifiedFormula !== ""){
         currentFormula=simplifiedFormula;
-        if (typeof stepFunction !== 'undefined') {
-          stepFunction(currentFormula);
-        }
+        //if (typeof stepFunction !== 'undefined') {
+        //  stepFunction(currentFormula);
+        //}
       }
     }
     
@@ -349,21 +361,21 @@ var Calculate = function(mainFormula){
   }
 
 
-  function symbolicOperations(aFormula, stepByStep=false){
+  function symbolicOperations(aFormula){
     return "symbolicOperations";
   }
   
-  function calculate(aFormula, stepFunction){
-    return parenthesesOperations(aFormula, stepFunction);
-    //symbolicOperations(simplifiedFormula, stepByStep);
+  function calculate(aFormula){
+    return parenthesesOperations(aFormula);
+    //symbolicOperations(simplifiedFormula);
   }
   
   
   if (typeof mainFormula !== 'undefined') {
-    //Constructor with a formula to calculate
+    //'Constructor' WITH a formula : calculate
     return calculate(mainFormula);
   }else{
-    //return the function to calculate !!!!
+    //else, return the function to calculate !!!!
     return calculate;
   }
 
