@@ -4,10 +4,85 @@
     <meta charset="utf8" />
       <script src="./calculator.js"></script>
       <script>
-        console.log("in Constructor", Calculate("addition(5+5)*random()"));
-        console.log("in Constructor", Calculate("10*random()"));
-        var calculator = new Calculate();
-        console.log("calc1", calculator("cos(random())"));
+
+          var formula;
+
+          function giveAnOperation(){
+            switch (parseInt(Math.random()*6)) {
+              case 0:
+                opSym="+";
+                break;
+              case 1:
+                opSym="-";
+                break;
+              case 2:
+                opSym="*";
+                break;
+              case 3:
+                opSym="/";
+                break;
+              case 4:
+                opSym="^";
+                break;
+              default:
+                opSym="+";
+                break;
+            }
+            return opSym;
+          }
+          
+          
+         
+          function randomFormula(){
+          var operation="";
+            var formula="";
+            var numIter=parseInt(Math.random()*10);
+            for (var i = 1; i < numIter; i++) {
+              var randIter=parseInt(Math.random()*5);
+              
+              if(formula!==""){
+                operation=giveAnOperation();
+                formula=formula+giveAnOperation();
+              }
+              var aValue=Math.random()*100*Math.random()*100;
+              if(operation="^"){
+                aValue=parseInt(aValue/1000);
+              }
+              if(Math.random()*100>50){
+                formula=formula+parseInt(aValue);
+              }else{
+                formula=formula+parseFloat(aValue);
+              }
+            }
+            return formula;
+          }
+
+      var aFormula, myResult, evalResult;
+      for (var i = 0; i < 10; i++) {
+        aFormula=randomFormula();
+        evalResult=eval(aFormula);
+        myResult=BasicCalculator(aFormula);
+        test=(evalResult === myResult);
+        if(!test){
+          console.error(aFormula);
+          console.error("EVAL", evalResult, "MY", myResult);
+        }
+      }
+      
+      var calculator = new BasicCalculator();
+      for (var i = 0; i < 10; i++) {
+        aFormula=randomFormula();
+        evalResult=eval(aFormula);
+        myResult=calculator(aFormula);
+        test=(evalResult === myResult);
+        if(!test){
+          console.error(aFormula);
+          console.error("EVAL", evalResult, "MY", myResult);
+        }
+      }
+      
+      console.log("finished");
+
       </script>
   </head>
 </html>

@@ -1,5 +1,220 @@
 "use strict";
 
+var BasicCalculator = function(){
+
+  function doOperation(leftValue, operation, rightValue){
+    var result;
+    leftValue=parseFloat(leftValue);
+    rightValue=parseFloat(rightValue);
+    switch (operation) {
+      case '+':
+        result=leftValue+rightValue;
+        break;
+      case '-':
+        result=leftValue-rightValue;
+        break;
+      case '*':
+        result=leftValue*rightValue;
+        break;
+      case '/':
+        result=leftValue/rightValue;
+        break;
+      case '!':
+        //Note: only the left value !
+        result=factorial(leftValue);
+        break;
+      case '^':
+        result=Math.pow(leftValue, rightValue);
+        break;
+      default:
+        console.error("ERROR", leftValue, operation, rightValue);
+    }
+    return result;
+  }
+  
+  function factorial(value){
+    if(factorialInt(value)){
+      return factorialInt(parameters);
+    }else{
+      //fact_Gamma(value+1)
+      return fct_math_factorialGamma(value+1);
+    }
+  }
+  function factorialInt(value){
+    if(value == 0){
+      //fact(0)=1
+      return 1;
+    }else{
+      return value*factorialInt(value-1);
+    }
+  }
+  function fct_math_factorialGamma(value) {
+    var tmp=(value-0.5)*Math.log(value+4.5)-(value+4.5);
+    var ser=1.0+76.18009173/(value+0)-86.50532033/(value+1)+24.01409822/(value+2);
+    ser=ser-1.231739516/(value+3)+0.00120858003/(value+4)-0.00000536382/(value+5);
+    return Math.exp(tmp+Math.log(ser*Math.sqrt(2*Math.PI)));
+  }
+
+  function replaceDecimalSeparator(aValue){
+    //TODO
+    return value;
+  }
+
+  var decimalSeparator=".";
+  
+  //Symbols alias
+  var operationsAlias=[];
+  operationsAlias["square"]=["²", "^2"];
+  operationsAlias["percent"]=["%", "/100"];
+  //operationsAlias["increment"]=["++", "+1"];
+  //operationsAlias["decrement"]=["--", "-1"];
+  
+  var operationsOrder=[];
+  operationsOrder.push([true, "^"]);
+  operationsOrder.push([false, "!/*"]);
+  operationsOrder.push([false, "+-"]);
+  
+  /* FOR LATER....
+  specialSymbols["concatenate"]=["&"];
+  specialSymbols["equal"]=["="];  //affectation AND test !!!
+  specialSymbols["notEqual"]=["<>"];
+  specialSymbols["lessEqual"]=["<="];
+  specialSymbols["greaterEqual"]=[">="];
+  specialSymbols["less"]=["<"];
+  specialSymbols["greater"]=[">"];
+  specialSymbols["wildcard"]=["*"];
+  specialSymbols["absolute"]=["$"];
+  specialSymbols["sheetReference"]=["!"];  //Sheet2!A1:B1 */
+
+
+  function calculate(aFormula){
+    var error=false;
+    var currentFormula=aFormula;
+    var keyOrder;
+    var operationsAvailable="";
+    var operationsOrderNumber=[];
+    
+    //get all symbols of operations
+    for(var k in operationsOrder){
+      operationsAvailable=operationsAvailable+operationsOrder[k][1];
+      operationsOrderNumber.push([]);
+    }
+    
+    //Replace alias symbol
+    for(var keyAlias in operationsAlias){
+      var symbolAlias=operationsAlias[keyAlias][0];
+      var SymbolReplacement=operationsAlias[keyAlias][1];
+      currentFormula=currentFormula.replace(symbolAlias, SymbolReplacement);
+    }
+    
+    
+    var keyOrder=0;
+    
+    
+     var pos=0;
+     var itemsFormula=[];
+     var previousItemIdx=0;
+
+     
+     
+
+     //PARSE : Split the formula into item of array
+     while(!error && pos<currentFormula.length){
+        
+        //get the current character
+        var currentChar=currentFormula[pos];
+        //Check if it's an operation
+        if(operationsAvailable.indexOf(currentChar)>-1){
+          //extract the previous value
+          var aValue=currentFormula.substring(previousItemIdx, pos);
+          //Push the value and the operation in the array
+          itemsFormula.push(aValue);
+          itemsFormula.push(currentChar);
+          //save the current position for the next value
+          previousItemIdx=pos+1;
+          
+          
+          for(var i=0; i<operationsOrder.length; i++){
+            if(operationsOrder[i][1].indexOf(currentChar)>-1){
+              operationsOrderNumber[i].push(itemsFormula.length-1);
+            }
+          }
+        }
+        
+        //if no error
+        if(!error){
+          //Go to next character (left OR right)
+          pos++;
+        }
+      }
+      
+      var aValue=currentFormula.substring(previousItemIdx, currentFormula.length);
+      //Push the value and the operation in the array
+      itemsFormula.push(aValue);
+    
+    keyOrder=0;
+    
+    //MAIN-LOOP
+    //until : all order are done OR error
+    while(!error && keyOrder<operationsOrder.length){
+      
+      if(operationsOrderNumber[keyOrder].length>0){
+        var i=0;
+        while(!error && i<operationsOrderNumber[keyOrder].length){
+          var operationPos=operationsOrderNumber[keyOrder][i];
+          var operationSymbol=itemsFormula[operationPos];
+          //search for the left value
+          var leftIdx=operationPos-1;
+          while(leftIdx>0 && itemsFormula[leftIdx]==null){
+            leftIdx--;
+          }
+          //search for the right value
+          var rightValueIdx=operationPos+1;
+          while(rightValueIdx<itemsFormula.length && itemsFormula[rightValueIdx]==null){
+            rightValueIdx++;
+          }
+          //get values
+          var leftValue=itemsFormula[leftIdx];
+          var rightValue=itemsFormula[rightValueIdx];
+          
+          var result=doOperation(leftValue, operationSymbol, rightValue);
+          itemsFormula[operationPos]=result;
+          itemsFormula[leftIdx]=null;
+          itemsFormula[rightValueIdx]=null;
+          
+          i++;
+        }
+        
+        
+
+      }
+      
+      keyOrder++;
+    }
+      
+    var resultIdx=0;
+    while(resultIdx<itemsFormula.length && itemsFormula[resultIdx]==null){
+        resultIdx++;
+    }
+    
+    
+    
+    
+    return itemsFormula[resultIdx];
+  }
+  
+
+
+  if(arguments.length>0){
+    //'Constructor' WITH a formula : calculate
+    return calculate.apply(null, arguments);
+  }else{
+    //else, return the function to calculate !!!!
+    return calculate;
+  }
+  
+}
+
 var Calculate = function(){
 
   var parameterSeparator=",";
@@ -180,33 +395,6 @@ var Calculate = function(){
   values["pi"]=["Math", fct_math_pi];
   values["e"]=["Math", fct_math_e];
 
-  //Keyname -> mathematical symbol
-  //Warning !!! order IS important !!!!!
-  var specialSymbols=[];
-  specialSymbols["cellReference"]=[":"];
-  specialSymbols["intersection"]=[" "]; //(=common cells)
-  specialSymbols["square"]=["²"];
-  specialSymbols["pow"]=["^"];
-  specialSymbols["factorial"]=["!"]; 
-  specialSymbols["percent"]=["%"]; //=x/100
-  specialSymbols["mod"]=["%"];
-  specialSymbols["division"]=["/"];
-  specialSymbols["multiplication"]=["*"];
-  specialSymbols["addition"]=["+"];
-  specialSymbols["subtraction"]=["-"];
-  
-  specialSymbols["concatenate"]=["&"];
-  specialSymbols["equal"]=["="];  //affectation AND test !!!
-  specialSymbols["notEqual"]=["<>"];
-  specialSymbols["lessEqual"]=["<="];
-  specialSymbols["greaterEqual"]=[">="];
-  specialSymbols["less"]=["<"];
-  specialSymbols["greater"]=[">"];
-  specialSymbols["wildcard"]=["*"];
-  specialSymbols["absolute"]=["$"];
-  specialSymbols["sheetReference"]=["!"];  //Sheet2!A1:B1
-  
-
   //minus sign ???
 
   function consoleError(aFormula, pos, message){
@@ -347,6 +535,8 @@ var Calculate = function(){
           parenthesisRemaining--;
         }else{
           var key;
+          /** REPLACE WITH BASIC CALCULATOR symbols
+          
           for(key in specialSymbols){
             if(specialSymbols[key]==currentFormula[pos]){
               //current character is a symbolic operation,
@@ -354,6 +544,7 @@ var Calculate = function(){
               currentItemStartPos=pos+1;
             }
           }
+          */
         }
         
         //if no error, go to next character
@@ -379,38 +570,12 @@ var Calculate = function(){
     //Return the new formula, without parenthesis
     return currentFormula;
   }
-
-  function symbolicOperations(aFormula, start, end){
-    
-    var error=false;
-    var done=false;
-    var currentFormula;
-    
-    if (typeof start !== 'undefined') {
-      //if no end position, use the formula length
-      if (typeof end == 'undefined') {
-        end=aFormula.length;
-      }
-      //extract the sub-formula
-      currentFormula=aFormula.substring(start, end);
-    }else{
-      //calculate the full formula
-      currentFormula=aFormula
-    }
-   
-    //CHEATING AT THE MOMENT !
-    //USING EVAL : since NO parenthesis = NO JS code !! = safe !
-    var simplifiedFormula=eval(currentFormula);
-    
-    //Return the result
-    return simplifiedFormula;
-  }
   
   function calculate(){
     var aFormula = arguments[0];
     var formulaWithoutParenthesis = parenthesesOperations(aFormula);
     //if no error continue :
-    return symbolicOperations(formulaWithoutParenthesis);
+    return formulaWithoutParenthesis; //symbolicOperations(formulaWithoutParenthesis);
   }
  
   if(arguments.length>0){
