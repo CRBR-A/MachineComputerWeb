@@ -3,6 +3,7 @@
 var BasicCalculator = function(){
 
   function doOperation(leftValue, operation, rightValue){
+    
     var result;
     leftValue=parseFloat(leftValue);
     rightValue=parseFloat(rightValue);
@@ -55,24 +56,32 @@ var BasicCalculator = function(){
     return Math.exp(tmp+Math.log(ser*Math.sqrt(2*Math.PI)));
   }
 
-  function replaceDecimalSeparator(aValue){
-    //TODO
-    return value;
-  }
-
   var decimalSeparator=".";
+  var valueWasCalculated=null;
   
-  //Symbols alias
+  //Join (or concatenate) all elements in the Formula-array not null
+  function joinElements(arrayFormula){
+    var result="";
+    for(var idx=0; idx<arrayFormula.length; idx++){
+      if(arrayFormula[idx]!==valueWasCalculated){
+        result=result+arrayFormula[idx];
+      }
+    }
+    return result;
+  }
+  
+  //Symbols alias (to replace)
   var operationsAlias=[];
   operationsAlias["square"]=["²", "^2"];
   operationsAlias["percent"]=["%", "/100"];
-  //operationsAlias["increment"]=["++", "+1"];
-  //operationsAlias["decrement"]=["--", "-1"];
   
-  var operationsOrder=[];
-  operationsOrder.push([true, "^"]);
-  operationsOrder.push([false, "!/*"]);
-  operationsOrder.push([false, "+-"]);
+  //Array of operations (array) IN ORDER !!!
+  //Index=1 : boolean : right-associative (right to left group of same operation)
+  //Index=2 : string of symbols
+  var operationsOrders=[];
+  operationsOrders.push([true, "^"]);
+  operationsOrders.push([false, "!/*"]);
+  operationsOrders.push([false, "+-"]);
   
   /* FOR LATER....
   specialSymbols["concatenate"]=["&"];
@@ -90,126 +99,169 @@ var BasicCalculator = function(){
   function calculate(aFormula){
     var error=false;
     var currentFormula=aFormula;
-    var keyOrder;
+    var currentOrderIndex=0;
     var operationsAvailable="";
-    var operationsOrderNumber=[];
+    var currentIdx=0;
+    var arrayFormula=[];
+    var operationsIndexOrders=[];
+    var previousItemIdx=0;
     
-    //get all symbols of operations
-    for(var k in operationsOrder){
-      operationsAvailable=operationsAvailable+operationsOrder[k][1];
-      operationsOrderNumber.push([]);
+    
+    for(var key in operationsOrders){
+      //Get all symbols operations
+      operationsAvailable=operationsAvailable+operationsOrders[key][1];
+      //Create a sub-array (operation index in the formula) for each order
+      operationsIndexOrders.push([]);
     }
     
-    //Replace alias symbol
+    //Replace all alias in the formula, by the correct operation
     for(var keyAlias in operationsAlias){
-      var symbolAlias=operationsAlias[keyAlias][0];
-      var SymbolReplacement=operationsAlias[keyAlias][1];
-      currentFormula=currentFormula.replace(symbolAlias, SymbolReplacement);
+      var symbol=operationsAlias[keyAlias];
+      currentFormula=currentFormula.replace(symbol[0], symbol[1]);
     }
-    
-    
-    var keyOrder=0;
-    
-    
-     var pos=0;
-     var itemsFormula=[];
-     var previousItemIdx=0;
 
-     
-     
-
-     //PARSE : Split the formula into item of array
-     while(!error && pos<currentFormula.length){
+    //STEP 1 : PARSE the formula
+    //Read and split the formula into elements of array
+    while(!error && currentIdx<currentFormula.length){
+      
+      //get the current character
+      var currentChar=currentFormula[currentIdx];
+      //Check if it's an operation
+      if(operationsAvailable.indexOf(currentChar)>-1){
+        //get the previous value
+        var aValue=currentFormula.substring(previousItemIdx, currentIdx);
+        //Push the value in the array Formula
+        arrayFormula.push(aValue);
+        //Push the operation in the array Formula
+        arrayFormula.push(currentChar);
+        //save the currentIdxition for the next value to get
+        previousItemIdx=currentIdx+1;
         
-        //get the current character
-        var currentChar=currentFormula[pos];
-        //Check if it's an operation
-        if(operationsAvailable.indexOf(currentChar)>-1){
-          //extract the previous value
-          var aValue=currentFormula.substring(previousItemIdx, pos);
-          //Push the value and the operation in the array
-          itemsFormula.push(aValue);
-          itemsFormula.push(currentChar);
-          //save the current position for the next value
-          previousItemIdx=pos+1;
+        //Save the operation index of the formula, for the order
+        var idxOrder=0;
+        var founded=false;
+        while(!error && !founded && idxOrder<operationsOrders.length){
+          if(operationsOrders[idxOrder][1].indexOf(currentChar)>-1){
+            //Found the operation in this order, save the index
+            operationsIndexOrders[idxOrder].push(arrayFormula.length-1);
+            founded=true;
+          }
+          idxOrder++;
+        }
+      }
+        
+      //if no error, go to the next character
+      if(!error){
+        currentIdx++;
+      }
+    }
+      
+    //Add the last value of the formula
+    var aValue=currentFormula.substring(previousItemIdx, currentFormula.length);
+    //Push the last value of the formula in the value
+    arrayFormula.push(aValue);
+    
+    //set currentOrderIndex
+    currentOrderIndex=0;
+    
+    //STEP 2 : do all operations (by order)
+    //until ERROR or operations done
+    while(!error && currentOrderIndex<operationsOrders.length){
+      
+      //Continue only if there are operations in this order
+      if(operationsIndexOrders[currentOrderIndex].length>0){
+        //Do all operations of this order
+        var currentOperationIndexOrder=0;
+        var operationsIndexLimitOrders=operationsIndexOrders[currentOrderIndex].length;
+        while(!error && currentOperationIndexOrder<operationsIndexLimitOrders){
+          //get operation index in the formula-array
+          var currentOperationIndexFormula=operationsIndexOrders[currentOrderIndex][currentOperationIndexOrder];
+          //get the symbol
+          var currentOperationSymbol=arrayFormula[currentOperationIndexFormula];
           
+          //set the 1st operation and the last operation
+          //used for right-associative operations
+          var firstSameOperationIndexOrder=currentOperationIndexOrder;          
+          var lastSameOperationIndexOrder=currentOperationIndexOrder;
           
-          for(var i=0; i<operationsOrder.length; i++){
-            if(operationsOrder[i][1].indexOf(currentChar)>-1){
-              operationsOrderNumber[i].push(itemsFormula.length-1);
+          //Special case : right-associative operation, like the power symbol
+          //Need to calculate right to left with same operator symbol
+          //2^3^4^5 = (2^(3^(4^5)))
+          if(operationsOrders[currentOrderIndex][0]){
+
+            //search the last operation in the sequence
+            //until operations are different or no other operation in this order
+            var stop=false;
+            while(!stop && lastSameOperationIndexOrder<operationsIndexLimitOrders){
+              var nextOperationSymbol=arrayFormula[operationsIndexOrders[currentOrderIndex][lastSameOperationIndexOrder+1]];
+              if(currentOperationSymbol==nextOperationSymbol){
+                lastSameOperationIndexOrder++;
+              }else{
+                stop=true;
+              }
             }
+            //update the current operation
+            currentOperationIndexOrder=lastSameOperationIndexOrder;
           }
-        }
-        
-        //if no error
-        if(!error){
-          //Go to next character (left OR right)
-          pos++;
-        }
-      }
-      
-      var aValue=currentFormula.substring(previousItemIdx, currentFormula.length);
-      //Push the value and the operation in the array
-      itemsFormula.push(aValue);
-    
-    keyOrder=0;
-    
-    //MAIN-LOOP
-    //until : all order are done OR error
-    while(!error && keyOrder<operationsOrder.length){
-      
-      if(operationsOrderNumber[keyOrder].length>0){
-        var i=0;
-        while(!error && i<operationsOrderNumber[keyOrder].length){
-          var operationPos=operationsOrderNumber[keyOrder][i];
-          var operationSymbol=itemsFormula[operationPos];
-          //search for the left value
-          var leftIdx=operationPos-1;
-          while(leftIdx>0 && itemsFormula[leftIdx]==null){
-            leftIdx--;
-          }
-          //search for the right value
-          var rightValueIdx=operationPos+1;
-          while(rightValueIdx<itemsFormula.length && itemsFormula[rightValueIdx]==null){
-            rightValueIdx++;
-          }
-          //get values
-          var leftValue=itemsFormula[leftIdx];
-          var rightValue=itemsFormula[rightValueIdx];
-          
-          var result=doOperation(leftValue, operationSymbol, rightValue);
-          itemsFormula[operationPos]=result;
-          itemsFormula[leftIdx]=null;
-          itemsFormula[rightValueIdx]=null;
-          
-          i++;
-        }
-        
-        
 
+          //
+          while(!error && firstSameOperationIndexOrder<currentOperationIndexOrder+1){
+            //get the operation index in the formula
+            currentOperationIndexFormula=operationsIndexOrders[currentOrderIndex][currentOperationIndexOrder];
+
+            //search for the 1st left value
+            var leftIdx=currentOperationIndexFormula-1;
+            while(leftIdx>0 && arrayFormula[leftIdx]==valueWasCalculated){
+              leftIdx--;
+            }
+            //search for the 1st right value
+            var rightValueIdx=currentOperationIndexFormula+1;
+            while(rightValueIdx<arrayFormula.length && arrayFormula[rightValueIdx]==valueWasCalculated){
+              rightValueIdx++;
+            }
+            //get values
+            var leftValue=arrayFormula[leftIdx];
+            var rightValue=arrayFormula[rightValueIdx];
+            
+            //calculate
+            var result=doOperation(leftValue, currentOperationSymbol, rightValue);
+            //replace the symbol with the result
+            arrayFormula[currentOperationIndexFormula]=result;
+            //set the left and right value to calculated (flag)
+            arrayFormula[leftIdx]=valueWasCalculated;
+            arrayFormula[rightValueIdx]=valueWasCalculated;
+            
+            //go to previous operation
+            //used for right-associative operations
+            //break loop for left-associative operation (operation done)
+            currentOperationIndexOrder--;
+          }
+          
+          if(currentOperationIndexOrder<lastSameOperationIndexOrder){
+            //set the current idx with the LAST operation calculated
+            //used for right-associative operations
+            currentOperationIndexOrder=lastSameOperationIndexOrder;
+          }
+          
+          //go to the next operation of this order
+          currentOperationIndexOrder++;
+
+        }
       }
       
-      keyOrder++;
+      //Do the next order
+      currentOrderIndex++;
     }
-      
-    var resultIdx=0;
-    while(resultIdx<itemsFormula.length && itemsFormula[resultIdx]==null){
-        resultIdx++;
-    }
-    
-    
-    
-    
-    return itemsFormula[resultIdx];
+
+    //return the result (join)
+    return joinElements(arrayFormula);
   }
-  
-
 
   if(arguments.length>0){
-    //'Constructor' WITH a formula : calculate
+    //Direct call of the function (with arguments)
     return calculate.apply(null, arguments);
   }else{
-    //else, return the function to calculate !!!!
+    //instance : return the function for later use
     return calculate;
   }
   
@@ -315,27 +367,27 @@ var Calculate = function(){
   
   function checkParenthesis(value){
     var parenthesesNotClosed=0;
-    var pos=0;
+    var currentIdx=0;
     var error=false;
     
     //Loop all characters
     //Until error OR end of string
-    while(!error && pos<value.length){
-      if(value[pos] == "("){
+    while(!error && currentIdx<value.length){
+      if(value[currentIdx] == "("){
         parenthesesNotClosed++;
       }else{
-        if(value[pos] == ")"){
+        if(value[currentIdx] == ")"){
           parenthesesNotClosed--;
         }
       }
       if(parenthesesNotClosed < 0){
         error=true;
       }else{
-        pos++;
+        currentIdx++;
       }
     }
     if(error || parenthesesNotClosed !== 0){
-      return pos;
+      return currentIdx;
     }else{
       return -1;
     }
@@ -397,15 +449,15 @@ var Calculate = function(){
 
   //minus sign ???
 
-  function consoleError(aFormula, pos, message){
+  function consoleError(aFormula, currentIdx, message){
     console.error(aFormula);
-    var i, linePos="";
-    for(i=0; i<pos;i++){
-      linePos=linePos+" "
+    var i, linecurrentIdx="";
+    for(i=0; i<currentIdx;i++){
+      linecurrentIdx=linecurrentIdx+" "
     }
-    linePos=linePos+"^"
-    console.error(linePos);
-    console.error("c",pos, " : ", message);
+    linecurrentIdx=linecurrentIdx+"^"
+    console.error(linecurrentIdx);
+    console.error("c",currentIdx, " : ", message);
   }
 
   //execute the functionName(parameter)
@@ -426,7 +478,7 @@ var Calculate = function(){
   function splitParameters(parameter){
     var result=[];
     var error=false;
-    var pos=0;
+    var currentIdx=0;
     var currentParameter="";
     var insideString=false;
     var previousCharacter="";
@@ -435,8 +487,8 @@ var Calculate = function(){
     //loop all characters in String
     //for spiting
     //until error or done
-    while(!error && pos<parameter.length){
-      currentChar=parameter[pos];
+    while(!error && currentIdx<parameter.length){
+      currentChar=parameter[currentIdx];
       //if the current character is the parameter separator
       if(currentChar == parameterSeparator){
         var subResult=symbolicOperations(currentParameter);
@@ -453,7 +505,7 @@ var Calculate = function(){
       
       //Next character if no errors
       if(!error){
-        pos++;
+        currentIdx++;
       }
     }
     
@@ -475,7 +527,7 @@ var Calculate = function(){
     var typeError="";
     parenthesesNotClosed < 0 ? typeError=")" : typeError="(";
     var msgError=Math.abs(parenthesesNotClosed).toString()+" '"+typeError+"' remaining";
-    consoleError(currentFormula, pos, msgError);
+    consoleError(currentFormula, currentIdx, msgError);
   }
    */
    
@@ -502,10 +554,10 @@ var Calculate = function(){
     //calculate all parenthesis in the formula
     //until : done OR error
     while(!error && !done){
-      var pos=0;
+      var currentIdx=0;
       var simplifiedFormula="";
       var lastOpenedParenIdx=0;
-      var currentItemStartPos=0;
+      var currentItemStartcurrentIdx=0;
       var itemParenthesisStart;
       var parenthesisRemaining=0;
 
@@ -513,15 +565,15 @@ var Calculate = function(){
       //calculate the 1st pair of parenthesis
       //until : Error OR end of the formula (no parenthesis) OR new formula
       //to simplify the first "(...)"
-      while(!error && pos<currentFormula.length && simplifiedFormula == ""){
+      while(!error && currentIdx<currentFormula.length && simplifiedFormula == ""){
         
-        if(currentFormula[pos] == "("){
+        if(currentFormula[currentIdx] == "("){
           //save indexes (parenthesis, previous and new items)
-          lastOpenedParenIdx=pos;
-          itemParenthesisStart=currentItemStartPos;
-          currentItemStartPos=pos+1;
+          lastOpenedParenIdx=currentIdx;
+          itemParenthesisStart=currentItemStartcurrentIdx;
+          currentItemStartcurrentIdx=currentIdx+1;
           parenthesisRemaining++;
-        }else if(currentFormula[pos] == ")"){
+        }else if(currentFormula[currentIdx] == ")"){
           var functionName;
           //get the name's function
           if(itemParenthesisStart !== lastOpenedParenIdx){
@@ -529,19 +581,19 @@ var Calculate = function(){
           }else{
             functionName="";
           }
-          var parameters=currentFormula.substring(lastOpenedParenIdx+1, pos);
+          var parameters=currentFormula.substring(lastOpenedParenIdx+1, currentIdx);
           var result=doFunction(functionName, parameters);
-          simplifiedFormula=replaceSubFormula(currentFormula, result, itemParenthesisStart, pos+1);
+          simplifiedFormula=replaceSubFormula(currentFormula, result, itemParenthesisStart, currentIdx+1);
           parenthesisRemaining--;
         }else{
           var key;
           /** REPLACE WITH BASIC CALCULATOR symbols
           
           for(key in specialSymbols){
-            if(specialSymbols[key]==currentFormula[pos]){
+            if(specialSymbols[key]==currentFormula[currentIdx]){
               //current character is a symbolic operation,
               //reset the currentElement
-              currentItemStartPos=pos+1;
+              currentItemStartcurrentIdx=currentIdx+1;
             }
           }
           */
@@ -549,12 +601,12 @@ var Calculate = function(){
         
         //if no error, go to next character
         if(!error){
-          pos++;
+          currentIdx++;
         }
       }
       
       //end of the formula AND no more parenthesis ?? done
-      if(pos==currentFormula.length && parenthesisRemaining==0){
+      if(currentIdx==currentFormula.length && parenthesisRemaining==0){
         done=true;
       }
       

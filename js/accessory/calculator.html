@@ -56,6 +56,8 @@
             }
             return formula;
           }
+          
+          
 
       var aFormula, myResult, evalResult;
       for (var i = 0; i < 10; i++) {
@@ -63,10 +65,10 @@
         evalResult=eval(aFormula);
         myResult=BasicCalculator(aFormula);
         test=(evalResult === myResult);
-        if(!test){
+        //if(!test){
           console.error(aFormula);
           console.error("EVAL", evalResult, "MY", myResult);
-        }
+        //}
       }
       
       var calculator = new BasicCalculator();
@@ -75,11 +77,12 @@
         evalResult=eval(aFormula);
         myResult=calculator(aFormula);
         test=(evalResult === myResult);
-        if(!test){
+        //if(!test){
           console.error(aFormula);
           console.error("EVAL", evalResult, "MY", myResult);
-        }
+        //}
       }
+      
       
       console.log("finished");
 
