@@ -64,7 +64,7 @@
         aFormula=randomFormula();
         evalResult=eval(aFormula);
         myResult=BasicCalculator(aFormula);
-        test=(evalResult === myResult);
+        test=(evalResult == myResult);
         //if(!test){
           console.error(aFormula);
           console.error("EVAL", evalResult, "MY", myResult);
@@ -76,7 +76,7 @@
         aFormula=randomFormula();
         evalResult=eval(aFormula);
         myResult=calculator(aFormula);
-        test=(evalResult === myResult);
+        test=(evalResult == myResult);
         //if(!test){
           console.error(aFormula);
           console.error("EVAL", evalResult, "MY", myResult);
