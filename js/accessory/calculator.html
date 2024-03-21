@@ -63,7 +63,7 @@
       for (var i = 0; i < 10; i++) {
         aFormula=randomFormula();
         evalResult=eval(aFormula);
-        myResult=BasicCalculator(aFormula);
+        myResult=ScientificCalculator(aFormula);
         test=(evalResult == myResult);
         //if(!test){
           console.error(aFormula);
@@ -71,7 +71,7 @@
         //}
       }
       
-      var calculator = new BasicCalculator();
+      var calculator = new ScientificCalculator();
       for (var i = 0; i < 10; i++) {
         aFormula=randomFormula();
         evalResult=eval(aFormula);
