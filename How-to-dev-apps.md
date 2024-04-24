@@ -4,10 +4,25 @@
 # Math  
 
 ## 1. Basic calculator  
-- include basic operations : \+, \-, \*, \/, \^  
-- read symbols (mathematical) and numbers  
-- rule : power, division, multiplication, addition, subtraction ("BODMAS")
-  
+- Input : a string containing a basic mathematical expression
+- Output : return the result of the expression  
+- include : 
+  - basic operations (\+, \-, \*, \/, \^)  
+  - can include other symbols/operations like factorial
+  - numbers (integer or float)
+- Algo
+  - parse the expression
+  - seek for operations
+- rules : 
+  - order for reading : from left to right
+  - order of operation (BODMAS) :
+    - power
+    - division and multiplication
+    - addition and subtraction
+  - order for calculation : from left to right (left-associative)
+    - EXCEPT power : from right to left (right-associative or top-bottom)
+      - example : 2^3^4 = (2^(3^4))
+
 ## 2. Scientific calculator  
 - basic calculator + mathematical functions  
 - cos(x), sin(x)...
