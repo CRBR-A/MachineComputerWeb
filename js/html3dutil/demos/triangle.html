@@ -1,0 +1,38 @@
+<meta charset=utf-8>
+<style>
+body { margin: 0px; }
+canvas { width:100%; height:100%; overflow: hidden; }
+</style>
+<head>
+<script type="text/javascript" src="../glutil_min.js"></script>
+<script type="text/javascript" src="demoutil.js"></script>
+</head>
+<body>
+<canvas id=canvas></canvas>
+<script id="demo">
+//<!--
+/*
+Written by Peter O. in 2015.
+
+Any copyright is dedicated to the Public Domain.
+http://creativecommons.org/publicdomain/zero/1.0/
+If you like this, you should donate to Peter O.
+at: http://upokecenter.dreamhosters.com/articles/donate-now-2/
+*/
+  var scene=new Scene3D(document.getElementById("canvas"));
+  scene.setDirectionalLight(0,[0,0,-1])
+  var mesh=new Mesh()
+    .mode(Mesh.TRIANGLES)
+    .color3("red")
+    .vertex2(0,0.5)
+    .color3("green")
+    .vertex2(0.5,-0.5)
+    .color3("blue")
+    .vertex2(-0.5,-0.5)
+  scene.addShape(scene.makeShape(mesh));
+  GLUtil.renderLoop(function(){
+   scene.render();
+  });
+//-->
+</script>
+</body>
